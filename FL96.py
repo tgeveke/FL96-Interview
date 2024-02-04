@@ -18,15 +18,25 @@ class PrecursorMissingException(RuntimeError):
 
 # ---------- Classes ---------- #
 class Material:
+    '''
+    Base class shared by Precusor and Target, 
+    containing location information
+    '''
     def __init__(self) -> None:
         self.location: str
     
 class Precursor(Material):
+    '''
+    Inherited Matieral class for storing a single precursor 
+    '''
     def __init__(self) -> None:
         super().__init__()
         self.concentration: int or float
     
     def __str__(self) -> str:
+        '''
+        Returns a human-readable string representation of the precursor containing important information
+        '''
         return f'Precursor of element {self.precursor} at location: {self.location} with concentration {self.concentration} M/L'
 
 class Target(Material):
@@ -40,10 +50,16 @@ class Target(Material):
         self.current_makeup = {}
 
     def __str__(self) -> str:
+        '''
+        Returns a human-readable string representation of the target containing important information
+        '''
         return f'Target with makeup {self.target_ratio} at location: {self.location} with target volume {self.target_volume} mL'
 
 
-    def add(self, element, moles, volume):
+    def add(self, element: str, moles: int or float, volume: int or float):
+        '''
+        Method used in check_workflow() to verify that the generated steps produce the desired output
+        '''
         if element in self.current_makeup:
             print(f'element {element} already in target')
             self.current_makeup[element] += moles
@@ -53,6 +69,12 @@ class Target(Material):
         self.current_volume += volume
 
     def parse_target_ratio(self):
+        '''
+        Method called in generate_workflow_script() for each target.
+        
+        Uses self.target_ratio (string read from csv) to generate self.target_ratios,
+            a dictionary in the form {element: element_ratio, ...}
+        '''
         quantities = {}
         was_last_numeric: bool = False
         current_element = ''
@@ -75,37 +97,77 @@ class Target(Material):
         return self.target_ratios
     
 class AssayGenerator:
+    '''
+    Main class for generating the assay scripts.
+    
+    args:
+        precursors_fname: str = 'precursors.csv',
+        targets_fname: str = 'targets.csv',
+        output_fname: str = 'assays/assay.txt'
+    
+    methods:
+        calculate_workflow_steps()
+        check_workflow()
+        find_element()
+        generate_workflow_script()
+        get_precursor_at()
+        get_target_at()
+        process_csv_into_objects()
+    
+    attributes:
+        output_fname: str
+        precursors: list[Precursor]
+        targets: list[Target]
+        steps: list[list[str, str, int or float]]
+    '''
     def __init__(self, 
                  precursors_fname: str = 'precursors.csv',
                  targets_fname: str = 'targets.csv',
                  output_fname: str = 'assays/assay.txt') -> None:
         self.output_fname = output_fname
-
         self.precursors = self.process_csv_into_objects(precursors_fname, Precursor)
         self.targets = self.process_csv_into_objects(targets_fname, Target)
         self.steps = []
         self.calculate_workflow_steps()
         self.generate_workflow_script()
 
-    def find_element(self, element) -> Precursor:
+    def find_element(self, element: str) -> Precursor or None:
+        '''
+        Returns precursor object of argument element: str,
+            or None if no precursor is found for the given element
+        '''
         for precursor in self.precursors:
             if precursor.precursor == element:
                 return precursor
         return None
     
-    def get_precursor_at(self, location) -> Precursor:
-            for precursor in self.precursors:
-                if precursor.location == location:
-                    return precursor
-            return None
+    def get_precursor_at(self, location: str) -> Precursor or None:
+        '''
+        Returns precursor object at argument location: str,
+            or None if no precursor is found at the given location
+        '''
+        for precursor in self.precursors:
+            if precursor.location == location:
+                return precursor
+        return None
                 
-    def get_target_at(self, location) -> Target:
+    def get_target_at(self, location: str) -> Target or None:
+        '''
+        Returns target object at argument location: str,
+            or None if no target is found at the given location
+        '''
         for target in self.targets:
             if target.location == location:
                 return target
         return None
 
     def calculate_workflow_steps(self) -> list:
+        '''
+        Main method for generating the workflow steps,
+            given self.precursors and self.targets.
+        Takes no arguments, returns a list of steps 
+        Note: the method sets self.steps to generated steps before calling check_workflow()
+        '''
         steps = []
         for target in self.targets:
             target.parse_target_ratio() # Step which converts string makeup eg "Fe0.5Zn0.5" to dictionary {"Fe": 0.5, "Zn": 0.5}
@@ -141,8 +203,9 @@ class AssayGenerator:
             
             # Sanity check for target volume
             if not math.isclose(scaled_sum_volumes, target.target_volume, rel_tol=0.01):
-                print(f'{scaled_sum_volumes, target.target_volume}')
+                raise InvalidWorkflowException(f'{scaled_sum_volumes, target.target_volume}')
 
+        # Set member variable self.steps before calling self.check_workflow()
         self.steps = steps
 
         # Run check_workflow(), which validates that running all generated steps will produce the correct targets
@@ -154,9 +217,10 @@ class AssayGenerator:
         
     def check_workflow(self) -> (bool, str):
         ''''
-        Validates
+        Validates the generated steps in self.steps using target.add()
+        
+        Returns boolean workflow_success and string workflow_message
         '''
-
         for target in self.targets:
             target.current_makeup = {}
             target.current_volume = 0
@@ -246,7 +310,7 @@ if __name__ == '__main__':
             targets_fname = args.target_path
 
         # Call main script
-        AssayGenerator(
+        assay_generator = AssayGenerator(
             precursors_fname=precursors_fname,
             targets_fname=targets_fname
         )
