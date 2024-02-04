@@ -10,27 +10,33 @@ import csv
 
 # ---------- Classes ---------- #
 class Material:
-    name: str
-    location: str
-    contains: []
+    def __init__(self) -> None:
+        self.location: str
     
 class Precursor(Material):
-    concentration: int or float
+    def __init__(self) -> None:
+        super().__init__()
+        self.concentration: int or float
 
 
 class Target(Material):
-    target_ratio: float
-    target_ratios: dict
-    target_volume: int or float
-    target_ratio_str: int or float
+    def __init__(self) -> None:
+        super().__init__()
+        self.target_ratio: str
+        self.target_ratios: dict
+        self.target_volume: int or float
 
-    current_volume = 0
-    current_makeup = {}
+        self.current_volume = 0
+        self.current_makeup = {}
 
     def add(self, element, moles, volume):
-        self.current_makeup[element] = moles
-        self.current_volume += volume
+        if element in self.current_makeup:
+            print(f'element {element} already in target')
+            self.current_makeup[element] += moles
+        else:
+            self.current_makeup[element] = moles
 
+        self.current_volume += volume
 
     def parse_target_ratio(self):
         quantities = {}
@@ -60,60 +66,79 @@ def find_element(element, precursors) -> Precursor:
     for precursor in precursors:
         if precursor.precursor == element:
             return precursor
+    return None
 
 def calculate_workflow_steps(precursors: list[Precursor], targets: list[Target]) -> list:
     steps = []
+    
     for target in targets:
-        print()
-        target_volume = float(target.target_volume)
-
         target.parse_target_ratio()
-        print(target.target_ratios)
+
+        target.target_volume = float(target.target_volume)
+        target_volume_ml = target.target_volume
+
         for element, ratio in target.target_ratios.items():
             precursor = find_element(element, precursors)
-            concentration = float(precursor.concentration)
+            if precursor is None:
+                raise RuntimeError(f'No precusor for {element} found')
+            
+            concentration_mol_per_l = float(precursor.concentration)
 
-            pure_mL_needed = ratio * target_volume
-            volume_needed = (pure_mL_needed * concentration)
-            print(f'{element} (target {ratio}/{target_volume}) requires {pure_mL_needed} mL with concentration: {concentration} M/L, meaning {volume_needed} mL of precursor is required')
+            # Calculate volumes and ratios based on the modified algorithm
+            target_moles = ratio * (target_volume_ml / 1000)  # Convert target volume to liters
+            volume_l = target_moles / concentration_mol_per_l
+            volume_ml = round(volume_l * 1000, 3)
 
-            steps.append([precursor.location, target.location, volume_needed])
+            steps.append([precursor.location, target.location, volume_ml])
 
     if not check_workflow(steps, precursors, targets):
-        raise RuntimeError
+        raise RuntimeError('Workflow check returned False')
     
     return steps
 
 def check_workflow(steps, precursors, targets) -> bool:
-    def get_precusor_at(location) -> Precursor:
+    def get_precursor_at(location) -> Precursor:
         for precursor in precursors:
             if precursor.location == location:
+                print(f'precursor at location: {location} = {precursor.precursor}')
                 return precursor
+        return None
             
     def get_target_at(location) -> Target:
         for target in targets:
             if target.location == location:
+                print(f'target at location: {location} = {target.target_ratios}')
                 return target
+        return None
 
     for step in steps:
         start_location, end_location, volume = step
-        precursor = get_precusor_at(start_location)
+        precursor = get_precursor_at(start_location)
         target = get_target_at(end_location)
 
         element = precursor.precursor
         moles = float(precursor.concentration) * volume
 
         target.add(element, moles, volume)
-    
+
+        # input('next step?')
+
     for target in targets:
-        for element, quantity in target.target_ratios.items():
+        print(target.target_ratios)
+        print(target.current_makeup)
+        if target.current_volume != target.target_volume:
+            print(f'current volume {target.current_volume} != target volume {target.target_volume}')
+        for element, target_ratio in target.target_ratios.items():
+            print(f'Checking {element} with ratio: {target_ratio}')
             if element not in target.current_makeup.keys():
                 print(f'{element} not in {target.current_makeup.keys()}')
                 return False
-            if quantity != target.current_makeup[element]:
-                print(f'{element} {quantity} != {target.current_makeup[element]}')
+            if abs(target_ratio - target.current_makeup[element] / target.target_volume) > 1e-5:
+                print(f'{element} target {target_ratio} != current {target.current_makeup[element] / target.current_volume}')
                 return False
-
+        break
+    
+    return True
 
 def generate_workflow_script(steps, output_fname: str) -> None:
     def generate_step_string(start_location: str, end_location: str, quantity: float or int):
@@ -151,8 +176,9 @@ def process_csv_into_objects(fname: str, object_class) -> list:
         return objects
 
 def main():
-    precursors_fname = 'precursors.csv'
-    targets_fname = 'targets.csv'
+    # precursors_fname = 'precursors.csv'
+    precursors_fname = r'/Users/tom/Downloads/FL96/precursors.csv'
+    targets_fname = r'/Users/tom/Downloads/FL96/targets.csv'
     output_fname = 'assay.txt'
 
     precursors = process_csv_into_objects(precursors_fname, Precursor)
@@ -168,31 +194,6 @@ def main():
     )
 
 if __name__ == '__main__':
-    # main()
-
-    target = {'Fe': 0.5, 'Zn': 0.5} #, 'Mg': 0.2}
-    target_volume = 3
-    # liqs = {'Fe': 0.5, 'Zn': 1}
-    liqs = {'Fe': 1, 'Zn': 2, 'Mg': 1.5}
-
-    current = {}
-    current_volume = 0
-    for element, ratio in target.items():
-        moles_required = ratio * target_volume
-        print(moles_required)
-
-        volume_required = moles_required * (liqs[element])# / 1000)
-        print(volume_required)
-
-        current[element] = moles_required
-        current_volume += volume_required
-
-    volume_ratio = target_volume / current_volume
-    print(volume_ratio)
-    for key, value in current.items():
-        current[key] *= volume_ratio
-    ratios = {key: value / sum(current.values()) for key, value in current.items()}
-    print(current)
-    print(ratios)
-    print(current_volume)
-
+    import os
+    os.system('clear')
+    main()
