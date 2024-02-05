@@ -12,7 +12,7 @@ For each target, calculate the volume to create 1 Mole given the precursor's con
 
 
 $$
-    V_{molar} = \Sigma^{n}_{i=0}\left(\frac{R_i}{C_{\text{i[mol/L]}}}\right)
+    V_{1 \: mole} = \Sigma^{n}_{i=0}\left(\frac{R_i}{C_{\text{i, [mol/L]}}}\right)
 $$
 
 
@@ -20,7 +20,7 @@ Then, scale the volumes needed by s:
 
 
 $$ 
-    s = \frac{V_{target}}{V_{molar}}  
+    s = \frac{V_{target}}{V_{1 \: mole}}  
 $$
 
 
