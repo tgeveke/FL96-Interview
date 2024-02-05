@@ -350,11 +350,11 @@ if __name__ == '__main__':
             precursors_fname = 'precursors.csv'
         else:
             # If user supplies a non-default path
-            precursors_fname = args.precursor_path
+            precursors_fname = args.precursors_path
         if not args.targets_path:
             targets_fname = 'targets.csv'
         else:
-            targets_fname = args.target_path
+            targets_fname = args.targets_path
 
         # Call AssayGenerator constructor, which will handle everything 
         assay_generator = AssayGenerator(
