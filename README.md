@@ -22,8 +22,9 @@ $$
 
 Then, scale the volumes needed by s:
 $$
-    s = \frac{V}{v}
+    s = \frac{a}{b}
 $$
+
 $$ 
     s = \frac{V_{target}}{V_{1\:mole}}  
 $$
