@@ -1,6 +1,19 @@
 import unittest
 import os
+import platform
 import FL96
+
+def windows_remove(path: str):
+    os.system(f'del {path}')
+
+def unix_remove(path: str):
+    os.system(f'rm {path}')
+
+os_name = platform.system()
+if os_name == "Windows":
+    rm = windows_remove
+else:
+    rm = unix_remove
 
 class CSVTests(unittest.TestCase):    
     @staticmethod
@@ -39,9 +52,9 @@ class AssayGeneratorTests(unittest.TestCase):
             assert lines[0] == 'transfer("A1", "B1", 2.0)\n'
             assert lines[1] == 'transfer("A2", "B1", 1.0)\n'
         
-        os.system('rm test_precursors.csv')
-        os.system('rm test_targets.csv')
-        os.system('rm test_assay.txt')
+        rm('test_precursors.csv')
+        rm('test_targets.csv')
+        rm('test_assay.txt')
 
     def test_calculate_workflow_steps(self):
         self.assay_generator.calculate_workflow_steps()
@@ -83,7 +96,7 @@ class AssayGeneratorTests(unittest.TestCase):
             assert lines[0] == 'transfer("A1", "B1", 1.0)\n'
             assert lines[1] == 'transfer("A1", "B2", 2.0)\n'
 
-        os.system('rm testing_assay.txt')
+        rm('testing_assay.txt')
         self.assay_generator.steps = prev_steps
         self.assay_generator.output_fname = prev_output_fname
 
