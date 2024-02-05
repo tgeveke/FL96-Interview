@@ -12,7 +12,7 @@ For each target, calculate the volume to create 1 Mole given the precursor's con
 
 
 $$
-    V_{molar} = \Sigma^{n}_{i=0}\left(\frac{R_i}{C_{i[mol\:/\:L]}}\right)
+    V_{molar} = \Sigma^{n}_{i=0}\left(\frac{R_i}{C_{i[mol/L]}}\right)
 $$
 
 
