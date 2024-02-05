@@ -19,6 +19,30 @@ class AssayGeneratorTests(unittest.TestCase):
         super().__init__(methodName)
         self.assay_generator = FL96.AssayGenerator()
     
+    def test_full(self):
+        with open('test_precursors.csv', 'w') as file:
+            file.write('Location,Precursor,Concentration (mol/L)\n')
+            file.write('A1,Fe,1\n')
+            file.write('A2,Zn,2\n')
+            
+        with open('test_targets.csv', 'w') as file:
+            file.write('Location,Target ratio,Target volume (mL)\n')
+            file.write('B1,Fe0.5Zn0.5,3.0\n')
+
+        assay_generator = FL96.AssayGenerator(
+            precursors_fname='test_precursors.csv',
+            targets_fname='test_targets.csv',
+            output_fname='test_assay.txt',
+        )
+        with open('test_assay.txt', 'r') as file:
+            lines = file.readlines()
+            assert lines[0] == 'transfer("A1", "B1", 2.0)\n'
+            assert lines[1] == 'transfer("A2", "B1", 1.0)\n'
+        
+        os.system('rm test_precursors.csv')
+        os.system('rm test_targets.csv')
+        os.system('rm test_assay.txt')
+
     def test_calculate_workflow_steps(self):
         self.assay_generator.calculate_workflow_steps()
         assert self.assay_generator.steps != []
@@ -45,8 +69,9 @@ class AssayGeneratorTests(unittest.TestCase):
         self.assay_generator.precursors = prev_precursors
 
     def test_script_generation(self):
-        self.assay_generator.output_fname = 'testing_assay.txt'
         prev_steps = self.assay_generator.steps
+        prev_output_fname = self.assay_generator.output_fname
+        self.assay_generator.output_fname = 'testing_assay.txt'
         self.assay_generator.steps = [
             ['A1', 'B1', 1.0],
             ['A1', 'B2', 2.0]
@@ -60,6 +85,7 @@ class AssayGeneratorTests(unittest.TestCase):
 
         os.system('rm testing_assay.txt')
         self.assay_generator.steps = prev_steps
+        self.assay_generator.output_fname = prev_output_fname
 
 class TargetTests(unittest.TestCase):
     def test_parse_target_ratio(self):
