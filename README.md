@@ -10,7 +10,18 @@
 
 For each target, calculate the volume to create 1 Mole given the precursor's concentrations.
 
-$$\left( \sum_{k=1}^n a_k b_k \right)^2 \leq \left( \sum_{k=1}^n a_k^2 \right) \left( \sum_{k=1}^n b_k^2 \right)$$
+$$
+a = \frac{a}{b}
+    \left( 
+        \sum_{k=1}^n a_k b_k 
+    \right)
+    ^2 \leq 
+    \left( 
+        \sum_{k=1}^n a_k^2 \right) 
+    \left( 
+        \sum_{k=1}^n b_k^2 
+    \right)
+$$
 
 $$V_{1\:mole}=\Sigma^{n}_{i=0}\left(\frac{ratio_i}{concentration_{i,\:[mol\:/\:L]}}\right)$$
 
