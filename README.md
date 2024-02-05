@@ -10,9 +10,7 @@
 
 For each target, calculate the volume to create 1 Mole given the precursor's concentrations.
 
-$$
-V_{1\:mole} = \Sigma^{n}_{i=0}(\frac {ratio_i} {concentration_{i, \:[mol\: /\: L]}})
-$$
+$$V_{1\:mole} = \Sigma^{n}_{i=0}(\frac {ratio_i} {concentration_{i, \:[mol\: /\: L]}})$$
 
 Then, scale the volumes needed by s:
 $$ 
