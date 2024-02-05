@@ -11,23 +11,21 @@
 For each target, calculate the volume to create 1 Mole given the precursor's concentrations.
 
 $$
-a = \frac{a}{b}
     \left( 
-        \sum_{k=1}^n a_k b_k 
+    \sum_{k=1}^n a_k b_k \right)^2 \leq \left( \sum_{k=1}^n a_k^2 \right) \left( \sum_{k=1}^n b_k^2 
     \right)
-    ^2 \leq 
-    \left( 
-        \sum_{k=1}^n a_k^2 \right) 
-    \left( 
-        \sum_{k=1}^n b_k^2 
-    \right)
+    $$
+
+$$
+    V_{1\:mole} = \Sigma^{n}_{i=0}\left(\frac{ratio_i}{concentration_{i,\:[mol\:/\:L]}}\right)
 $$
 
-$$V_{1\:mole}=\Sigma^{n}_{i=0}\left(\frac{ratio_i}{concentration_{i,\:[mol\:/\:L]}}\right)$$
-
 Then, scale the volumes needed by s:
+$$
+    s = \frac{V}{v}
+$$
 $$ 
-s = \frac{V_{target}}{V_{1\:mole}}  
+    s = \frac{V_{target}}{V_{1\:mole}}  
 $$
 
 Thus, the total volume needed for each precursor can be written as:
